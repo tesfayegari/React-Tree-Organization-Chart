@@ -16,11 +16,11 @@
   "preconfiguredEntries": [{
     "groupId": "5c03119e-3074-46fd-976b-c60198311f70", // Other
     "group": { "default": "Other" },
-    "title": { "default": "TreeOrgChart" },
+    "title": { "default": "Tree Organization Chart" },
     "description": { "default": "Tree Organization Chart" },
-    "officeFabricIconFontName": "Page",
+    "officeFabricIconFontName": "Org",
     "properties": {
-      "title": "Tree Organization Chart",
+      "title": "My Team Organization Chart",
       "currentUserTeam": true,
       "maxLevels": 5
     }

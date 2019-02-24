@@ -1,6 +1,6 @@
 import {ITreeChildren } from './ITreeChildren';
 export interface ITreeData {
    title: any;
-   expanded: boolean;
+   expanded ?: boolean;
    children ? : ITreeChildren[];
 }

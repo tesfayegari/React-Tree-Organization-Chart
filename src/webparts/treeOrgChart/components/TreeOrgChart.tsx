@@ -11,7 +11,7 @@ import { WebPartTitle } from "@pnp/spfx-controls-react/lib/WebPartTitle";
 import spservice from '../../../services/spservices';
 import { ITreeChildren } from './ITreeChildren';
 import { ITreeData } from './ITreeData';
-import { Spinner ,SpinnerSize} from 'office-ui-fabric-react/lib/components/Spinner'
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/components/Spinner';
 
 import { ColorClassNames } from '@uifabric/styling/lib';
 
@@ -49,78 +49,72 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
 
   // Load Organization Chart
   public async loadOrgchart() {
-    this.setState({isLoading: true});
+    this.setState({ isLoading: true });
     const currentUser = `i:0#.f|membership|${this.props.context.pageContext.user.loginName}`;
     const currentUserProperties = await this.SPService.getUserProperties(currentUser);
     this.treeData = [];
     // Test if show only my Team or All Organization Chart
     if (!this.props.currentUserTeam) {
       const treeManagers = await this.buildOrganizationChart(currentUserProperties);
-      this.treeData.push({ title: (treeManagers.person), expanded: true, children: treeManagers.treeChildren });
+      this.treeData.push(treeManagers);
     } else {
       const treeManagers = await this.buildMyTeamOrganizationChart(currentUserProperties);
       this.treeData.push({ title: (treeManagers.person), expanded: true, children: treeManagers.treeChildren });
     }
     console.log(JSON.stringify(this.treeData));
-    this.setState({ treeData: this.treeData , isLoading: false});
+    this.setState({ treeData: this.treeData, isLoading: false });
   }
 
   public async buildOrganizationChart(currentUserProperties: any) {
     // Get Managers
     let managers: any[] = currentUserProperties.ExtendedManagers;
-    const treeManagers = await this.getManagers(managers);
+    const treeManagers = await this.getManagers(managers[0]);
     return treeManagers;
   }
   // Get Managersyyy
-  private async getManagers(managers: any[]) {
-    let treeChildren: ITreeChildren[] = [];
+  private async getManagers(manager: string) {
+
     let person: any;
     let spUser: IPersonaSharedProps = {};
-
-    for (let index = 0; index < managers.length; index++) {
-      const manager = managers[index];
-      const userProperties = await this.SPService.getUserProperties(manager);
-      const imageInitials: string[] = userProperties.DisplayName.split(' ');
-      spUser.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${userProperties.Email}`;
-      spUser.imageInitials = `${imageInitials[0].substring(0, 1).toUpperCase()}${imageInitials[1].substring(0, 1).toUpperCase()}`;
-      spUser.text = userProperties.DisplayName;
-      spUser.tertiaryText = userProperties.Email;
-      spUser.secondaryText = userProperties.Title;
-      // Top Manager
-      if (index === 0) {
-        const topManager = spUser;
-        person = <Persona {...topManager} hidePersonaDetails={false} size={PersonaSize.size40} />;
-      }
-      else {
-        const person = <Persona {...spUser} hidePersonaDetails={false} size={PersonaSize.size40} />;
-        if (userProperties.DirectReports && userProperties.DirectReports.length > 0) {
-          const usersDirectReports: any[] = await this.getDirectReports(userProperties.DirectReports);
-          treeChildren.push({ title: (person), children: usersDirectReports });
-        } else {
-          treeChildren.push({ title: (person) });
-        }
-      }
+    // Get User Properties
+    const managerProperties = await this.SPService.getUserProperties(manager);
+    const imageInitials: string[] = managerProperties.DisplayName.split(' ');
+    // Persona Card Properties
+    spUser.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${managerProperties.Email}`;
+    spUser.imageInitials = `${imageInitials[0].substring(0, 1).toUpperCase()}${imageInitials[1].substring(0, 1).toUpperCase()}`;
+    spUser.text = managerProperties.DisplayName;
+    spUser.tertiaryText = managerProperties.Email;
+    spUser.secondaryText = managerProperties.Title;
+    // PersonaCard component
+    person = <Persona {...spUser} hidePersonaDetails={false} size={PersonaSize.size40} />;
+    // Has DirectReports
+    if (managerProperties.DirectReports && managerProperties.DirectReports.length > 0) {
+      const usersDirectReports: any[] = await this.getChildren(managerProperties.DirectReports);
+      // return treeData
+      return { title: (person), expanded: true, children: usersDirectReports };
+      // Don't have DirectReports
+    } else {
+      // return treeData
+      return { title: (person) };
     }
-
-    return { 'person': person, 'treeChildren': treeChildren };
   }
-  // Get Managers
-  private async getDirectReports(userDirectReports: any[]) {
+  // Get Children (user DirectReports)
+  private async getChildren(userDirectReports: any[]) {
 
     let treeChildren: ITreeChildren[] = [];
     let spUser: IPersonaSharedProps = {};
 
     for (const user of userDirectReports) {
-      const userProperties = await this.SPService.getUserProperties(user);
-      const imageInitials: string[] = userProperties.DisplayName.split(' ');
+      const managerProperties = await this.SPService.getUserProperties(user);
+      const imageInitials: string[] = managerProperties.DisplayName.split(' ');
 
-      spUser.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${userProperties.Email}`;
+      spUser.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${managerProperties.Email}`;
       spUser.imageInitials = `${imageInitials[0].substring(0, 1).toUpperCase()}${imageInitials[1].substring(0, 1).toUpperCase()}`;
-      spUser.text = userProperties.DisplayName;
-      spUser.tertiaryText = userProperties.Email;
-      spUser.secondaryText = userProperties.Title;
+      spUser.text = managerProperties.DisplayName;
+      spUser.tertiaryText = managerProperties.Email;
+      spUser.secondaryText = managerProperties.Title;
       const person = <Persona {...spUser} hidePersonaDetails={false} size={PersonaSize.size40} />;
-      const usersDirectReports = await this.getDirectReports(userProperties.DirectReports);
+      const usersDirectReports = await this.getChildren(managerProperties.DirectReports);
 
       usersDirectReports ? treeChildren.push({ title: (person), children: usersDirectReports }) :
         treeChildren.push({ title: (person) });
@@ -133,27 +127,43 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
     let spUser: IPersonaSharedProps = {};
     let me: IPersonaSharedProps = {};
     let treeChildren: ITreeChildren[] = [];
+    let peer: IPersonaSharedProps = {};
+    // Get My Manager
     const myManager = await this.SPService.getUserProfileProperty(currentUserProperties.AccountName, 'Manager');
-    const userProperties = await this.SPService.getUserProperties(myManager);
-    const imageInitials: string[] = userProperties.DisplayName.split(' ');
-
-    spUser.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${userProperties.Email}`;
+    // Get My Manager Properties
+    const managerProperties = await this.SPService.getUserProperties(myManager);
+    const imageInitials: string[] = managerProperties.DisplayName.split(' ');
+    // PersonaCard Props
+    spUser.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${managerProperties.Email}`;
     spUser.imageInitials = `${imageInitials[0].substring(0, 1).toUpperCase()}${imageInitials[1].substring(0, 1).toUpperCase()}`;
-    spUser.text = userProperties.DisplayName;
-    spUser.tertiaryText = userProperties.Email;
-    spUser.secondaryText = userProperties.Title;
+    spUser.text = managerProperties.DisplayName;
+    spUser.tertiaryText = managerProperties.Email;
+    spUser.secondaryText = managerProperties.Title;
+    // PersonaCard Component
     const managerCard = <Persona {...spUser} hidePersonaDetails={false} size={PersonaSize.size40} />;
-    const meImageInitials: string[] = currentUserProperties.DisplayName.split(' ');
 
+    // Get my Properties
+    const meImageInitials: string[] = currentUserProperties.DisplayName.split(' ');
     me.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${currentUserProperties.Email}`;
-    me.imageInitials = `${imageInitials[0].substring(0, 1).toUpperCase()}${meImageInitials[1].substring(0, 1).toUpperCase()}`;
+    me.imageInitials = `${meImageInitials[0].substring(0, 1).toUpperCase()}${meImageInitials[1].substring(0, 1).toUpperCase()}`;
     me.text = currentUserProperties.DisplayName;
     me.tertiaryText = currentUserProperties.Email;
     me.secondaryText = currentUserProperties.Title;
     const meCard = <Persona {...me} hidePersonaDetails={false} size={PersonaSize.size40} />;
-    const usersDirectReports: any[] = await this.getDirectReports(currentUserProperties.DirectReports);
-
+    const usersDirectReports: any[] = await this.getChildren(currentUserProperties.DirectReports);
     treeChildren.push({ title: (meCard), expanded: true, children: usersDirectReports });
+    // Get MyPeers
+    for (const userPeer of currentUserProperties.Peers) {
+      const peerProperties = await this.SPService.getUserProperties(userPeer);
+      const imageInitials: string[] = peerProperties.DisplayName.split(' ');
+      peer.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${peerProperties.Email}`;
+      peer.imageInitials = `${imageInitials[0].substring(0, 1).toUpperCase()}${imageInitials[1].substring(0, 1).toUpperCase()}`;
+      peer.text = peerProperties.DisplayName;
+      peer.tertiaryText = peerProperties.Email;
+      peer.secondaryText = peerProperties.Title;
+      const peerCard = <Persona {...peer} hidePersonaDetails={false} size={PersonaSize.size40} />;
+      treeChildren.push({ title: (peerCard) });
+    }
 
     return { 'person': managerCard, 'treeChildren': treeChildren };
   }
@@ -168,9 +178,9 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
         <WebPartTitle displayMode={this.props.displayMode}
           title={this.props.title}
           updateProperty={this.props.updateProperty} />
-          {
-            this.state.isLoading ? <Spinner size={SpinnerSize.large} label="Loading ..."></Spinner> : null
-          }
+        {
+          this.state.isLoading ? <Spinner size={SpinnerSize.large} label="Loading ..."></Spinner> : null
+        }
 
         <div className={styles.treeContainer}>
           <SortableTree
