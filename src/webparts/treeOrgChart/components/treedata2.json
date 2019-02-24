@@ -1,0 +1,46 @@
+[
+  {
+    "title": {
+      "key": null,
+      "ref": null,
+      "props": {
+        "imageInitials": "AL",
+        "text": "Leonor Mendes",
+        "secondaryText": "",
+        "hidePersonaDetails": false,
+        "size": 12
+      },
+      "_owner": null
+    },
+    "children": [
+      {
+        "title": {
+          "key": null,
+          "ref": null,
+          "props": {
+            "imageInitials": "AL",
+            "text": "Ana Mendes",
+            "secondaryText": "IT",
+            "hidePersonaDetails": false,
+            "size": 12
+          },
+          "_owner": null
+        },
+        "children": {
+          "title": {
+            "key": null,
+            "ref": null,
+            "props": {
+              "imageInitials": "AL",
+              "text": "João Mendes",
+              "secondaryText": "IT/SI",
+              "hidePersonaDetails": false,
+              "size": 12
+            },
+            "_owner": null
+          }
+        }
+      }
+    ]
+  }
+]
