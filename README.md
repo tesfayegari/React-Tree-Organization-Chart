@@ -7,9 +7,9 @@ We can configure in the webpart properties if it show all Organization Chart or 
  
 
 
-![Organization Chart Web Part](./assets/screenshot1.png)
-![Organization Chart Web Part](./assets/screenshot2.png)
-![Organization Chart Web Part](./assets/screenshot3.png)
+![Organization Chart Web Part](./assets/Screenshot1.png)
+![Organization Chart Web Part](./assets/Screenshot2.png)
+![Organization Chart Web Part](./assets/Screenshot3.png)
 
 
 ## Used SharePoint Framework Version 
