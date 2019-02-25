@@ -13,8 +13,6 @@ import { ITreeChildren } from './ITreeChildren';
 import { ITreeData } from './ITreeData';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/components/Spinner';
 
-import { ColorClassNames } from '@uifabric/styling/lib';
-
 export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, ITreeOrgChartState> {
   private treeData: ITreeData[];
   private treeChildren: ITreeChildren[];
@@ -36,43 +34,59 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
     this.setState({ treeData });
   }
 
-  //
   public async componentDidUpdate(prevProps: ITreeOrgChartProps, prevState: ITreeOrgChartState) {
     if (this.props.currentUserTeam !== prevProps.currentUserTeam || this.props.maxLevels !== prevProps.maxLevels) {
       await this.loadOrgchart();
     }
   }
-  //
+
   public async componentDidMount() {
     await this.loadOrgchart();
   }
-
+  /*
   // Load Organization Chart
+  */
   public async loadOrgchart() {
-    this.setState({ isLoading: true });
+    this.setState({ treeData: [], isLoading: true });
     const currentUser = `i:0#.f|membership|${this.props.context.pageContext.user.loginName}`;
     const currentUserProperties = await this.SPService.getUserProperties(currentUser);
     this.treeData = [];
     // Test if show only my Team or All Organization Chart
     if (!this.props.currentUserTeam) {
       const treeManagers = await this.buildOrganizationChart(currentUserProperties);
-      this.treeData.push(treeManagers);
+      treeManagers ?
+        this.treeData.push(treeManagers)
+        : null;
     } else {
       const treeManagers = await this.buildMyTeamOrganizationChart(currentUserProperties);
-      this.treeData.push({ title: (treeManagers.person), expanded: true, children: treeManagers.treeChildren });
+      treeManagers ?
+        this.treeData.push({
+          title: (treeManagers.person),
+          expanded: true,
+          children: treeManagers.treeChildren
+        })
+        : null;
     }
     console.log(JSON.stringify(this.treeData));
     this.setState({ treeData: this.treeData, isLoading: false });
   }
 
+  /*
+    Build Organization Chart from currentUser
+    @parm : currentUserProperties
+  */
   public async buildOrganizationChart(currentUserProperties: any) {
     // Get Managers
-    let managers: any[] = currentUserProperties.ExtendedManagers;
-    const treeManagers = await this.getManagers(managers[0]);
+    let treeManagers: ITreeData = null;
+    if (currentUserProperties.ExtendedManagers && currentUserProperties.ExtendedManagers.length > 0) {
+      treeManagers = await this.getUsers(currentUserProperties.ExtendedManagers[0]);
+    }
     return treeManagers;
   }
-  // Get Managersyyy
-  private async getManagers(manager: string) {
+  /*
+  // Get user from Top Manager
+  */
+  private async getUsers(manager: string) {
 
     let person: any;
     let spUser: IPersonaSharedProps = {};
@@ -122,17 +136,22 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
     return treeChildren;
   }
 
+  /*
+      Build My Team Organization Chart
+      @parm: currentUserProperties
+  */
   private async buildMyTeamOrganizationChart(currentUserProperties: any) {
 
     let spUser: IPersonaSharedProps = {};
     let me: IPersonaSharedProps = {};
     let treeChildren: ITreeChildren[] = [];
     let peer: IPersonaSharedProps = {};
+    let imageInitials: string[];
     // Get My Manager
     const myManager = await this.SPService.getUserProfileProperty(currentUserProperties.AccountName, 'Manager');
     // Get My Manager Properties
     const managerProperties = await this.SPService.getUserProperties(myManager);
-    const imageInitials: string[] = managerProperties.DisplayName.split(' ');
+    imageInitials = managerProperties.DisplayName.split(' ');
     // PersonaCard Props
     spUser.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${managerProperties.Email}`;
     spUser.imageInitials = `${imageInitials[0].substring(0, 1).toUpperCase()}${imageInitials[1].substring(0, 1).toUpperCase()}`;
@@ -155,7 +174,7 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
     // Get MyPeers
     for (const userPeer of currentUserProperties.Peers) {
       const peerProperties = await this.SPService.getUserProperties(userPeer);
-      const imageInitials: string[] = peerProperties.DisplayName.split(' ');
+      imageInitials = peerProperties.DisplayName.split(' ');
       peer.imageUrl = `/_layouts/15/userphoto.aspx?size=L&username=${peerProperties.Email}`;
       peer.imageInitials = `${imageInitials[0].substring(0, 1).toUpperCase()}${imageInitials[1].substring(0, 1).toUpperCase()}`;
       peer.text = peerProperties.DisplayName;
@@ -164,14 +183,17 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
       const peerCard = <Persona {...peer} hidePersonaDetails={false} size={PersonaSize.size40} />;
       treeChildren.push({ title: (peerCard) });
     }
-
+    // Return
     return { 'person': managerCard, 'treeChildren': treeChildren };
   }
+
   // Contacto Info
   private onContactInfo(): void {
 
     window.open(`https://eur.delve.office.com/?p=${this.props.context.pageContext.user.loginName}&v=work`);
   }
+
+  // Render
   public render(): React.ReactElement<ITreeOrgChartProps> {
     return (
       <div className={styles.treeOrgChart}>
@@ -179,9 +201,8 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
           title={this.props.title}
           updateProperty={this.props.updateProperty} />
         {
-          this.state.isLoading ? <Spinner size={SpinnerSize.large} label="Loading ..."></Spinner> : null
+          this.state.isLoading ? <Spinner size={SpinnerSize.large} label="Loading Organization Chart ..."></Spinner> : null
         }
-
         <div className={styles.treeContainer}>
           <SortableTree
             treeData={this.state.treeData}

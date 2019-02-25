@@ -3,7 +3,7 @@ define([], function () {
     "PropertyPaneDescription": "Tree Organization Chart",
     "BasicGroupName": "Properties",
     "TitleFieldLabel": "WebPart Title",
-    "CurrentUserTeamFieldLabel": "Current User Team",
-    "MaxLevels": "Max Levels"
+    "CurrentUserTeamFieldLabel": "Show only my team ?",
+    "MaxLevels":  "Max Depth"
   }
 });
