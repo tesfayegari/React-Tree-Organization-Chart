@@ -1,6 +1,6 @@
 // SPFx  React-tree-Organization-Chart
-// Author: João Mendes 
-// Fev 2019
+// Author: João Mendes
+// Fev 2019 
 //
 import * as React from 'react';
 import styles from './TreeOrgChart.module.scss';
