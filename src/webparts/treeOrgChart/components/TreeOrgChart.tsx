@@ -22,8 +22,6 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
     super(props);
 
     this.SPService = new spservice(this.props.context);
-    this.onContactInfo = this.onContactInfo.bind(this);
-
     this.state = {
       treeData: [],
       isLoading: true
@@ -186,13 +184,6 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
     // Return
     return { 'person': managerCard, 'treeChildren': treeChildren };
   }
-
-  // Contacto Info
-  private onContactInfo(): void {
-
-    window.open(`https://eur.delve.office.com/?p=${this.props.context.pageContext.user.loginName}&v=work`);
-  }
-
   // Render
   public render(): React.ReactElement<ITreeOrgChartProps> {
     return (
