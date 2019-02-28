@@ -186,7 +186,6 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
         managerCard = meCard;
     }
 
-
     // Get MyPeers
     for (const userPeer of currentUserProperties.Peers) {
       const peerProperties = await this.SPService.getUserProperties(userPeer);
@@ -201,12 +200,6 @@ export default class TreeOrgChart extends React.Component<ITreeOrgChartProps, IT
     }
     // Return
     return { 'person': managerCard, 'treeChildren': treeChildren };
-  /*  if (treeChildren.length > 0 ) {
-      return { 'person': managerCard, 'treeChildren': treeChildren };
-    }
-    else{
-      return { 'person': managerCard ,'treeChildren' : []};
-    }*/
 
   }
   // Render
